@@ -98,20 +98,16 @@
     <script src="res/mui/js/mui.lazyload.js"></script>
     <script src="res/mui/js/mui.lazyload.img.js"></script>
     <script>
-
-         
-        // 获取穿过来的id值，
+        // 获取穿过来的id值，截取加循环
         var search = location.search.slice(1);
         search = search.split('&');
-
         var qs = {};
         for (var i = 0; i < search.length; i++) {
             var tmp = search[i].split('=');
             // 将拆分结果存入 qs 对象中
             qs[tmp[0]] = tmp[1];
         }
-
-        //   页面加载发送ajax请求 获取数据
+        //   页面加载发送ajax请求 获取数据 
         $.ajax({
             url: '/api/product/queryProductDetail',
             type: 'get',
@@ -120,34 +116,44 @@
                 //  计算原价和售价打了几折
                 info.size = info.size.split('-');
                 info.discound = (info.price / info.oldPrice * 10).toFixed(1);
-                console.log(info)
                 var fn = template('tpl', info);
                 $('#detail').html(fn);
+                //  轮播图
+                mui(function () {
+                    mui('.mui-slider').slider({
+                        interval: 3000 //自动轮播周期，若为0则不自动播放，默认为0；
+                    });
+                });
             }
         })
 
-
+        //  点击加入购物车发送请求
         $('.btn_addCart').on('click', function () {
+            //  获取模板中的数量Num值
             var num = $('.btn_num').val();
-
-
-
+            //  获取尺码的大小
+            var size = $('span.active').text();
             $.ajax({
                 url: ' /api/cart/addCart',
                 type: 'post',
                 data: {
+                    //  填入接受处理后的id值
                     productId: search,
+                    //  数量nuM
                     num: num,
-                    size: 50
+                    //  大小 size
+                    size: size,
                 },
                 success: function (data) {
-                    // console.log(data)
+                    //  判断是否登陆
                     if (data.error) {
+                        // 提示登陆
                         mui.alert(
                             '请先登陆',
                             '提示',
                             '确定',
                             function () {
+                                // 跳转登陆页
                                 location.href = '/user/login.html?url=' + location.href;
                             }
                         )
@@ -157,51 +163,30 @@
                 }
             })
         })
-        // $('#detail').on('click', '.btn_act', function () {
-        //     alert(1);
-        // }
-
-        //    型号选中类名添加判断
-        // $('#detail').on('click', '.btn_size', function () {
-        //     //   $(this).addClass('.active');
-        //     console.log(11)
-            
-        // })
 
 
+        //    型号选中类名添加判断 size
+        $('#detail').on('click', '.btn_size', function () {
+            // 给选中的尺码添加类名active
+            $(this).addClass('active').siblings().removeClass('active');
+
+        })
+        // 数量加建的操作 num
+        $('#detail').on('click', '.btn_act', function () {
+            // 获取数量
+            var input = $(this).siblings('input');
+            var n = input.val();
+            if ($(this).is('.jia')) {
+                // 加
+                return input.val(++n);
+            }
+
+            // 减
+            if (n <= 1) return;
+            input.val(--n);
+        })
 
 
-
-        //  轮播图
-        mui(function () {
-            mui('.mui-slider').slider({
-                interval: 3000 //自动轮播周期，若为0则不自动播放，默认为0；
-            });
-            mui('.mui-scroll-wrapper').scroll({
-                scrollY: true, //是否竖向滚动
-                scrollX: false, //是否横向滚动
-                startX: 0, //初始化时滚动至x
-                startY: 0, //初始化时滚动至y
-                indicators: false, //是否显示滚动条
-                deceleration: 0.0006, //阻尼系数,系数越小滑动越灵敏
-                bounce: true, //是否启用回弹
-            });
-            mui.init({
-                pullRefresh: {
-                    container: '.mui-scroll-wrapper',
-                    down: {
-                        callback: function () {
-                            setTimeout(function () {
-                                mui('.mui-scroll-wrapper').pullRefresh().endPulldownToRefresh(); //refresh completed
-                            }, 1000);
-                        }
-                    }
-                }
-            });
-            mui('.p_detail').imageLazyload({
-                placeholder: '../images/user.jpg'
-            });
-        });
     </script>
 
 </body>
